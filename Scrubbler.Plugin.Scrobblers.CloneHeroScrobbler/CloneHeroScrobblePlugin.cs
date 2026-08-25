@@ -13,10 +13,11 @@ namespace Scrubbler.Plugin.Scrobblers.CloneHeroScrobbler;
   Name = "Clone Hero Scrobbler",
   Description = "Automatically scrobble songs played in Clone Hero",
   SupportedPlatforms = PlatformSupport.All)]
-public sealed class CloneHeroScrobblePlugin : PluginBase.Plugin.PluginBase, IAutoScrobblePlugin, IPersistentPlugin, IAcceptAccountFunctions
+public sealed class CloneHeroScrobblePlugin : PluginBase.Plugin.PluginBase, IAutoScrobblePlugin, IPersistentPlugin, IAcceptAccountFunctions, IDisposable
 {
   private readonly JsonSettingsStore _settingsStore;
   private readonly CloneHeroScrobbleViewModel _vm;
+  private readonly ITickSource _pollTicks;
   private PluginSettings _settings = new();
 
   public CloneHeroScrobblePlugin(
@@ -31,11 +32,12 @@ public sealed class CloneHeroScrobblePlugin : PluginBase.Plugin.PluginBase, IAut
     Directory.CreateDirectory(settingsDir);
 
     _settingsStore = new JsonSettingsStore(Path.Combine(settingsDir, "settings.json"));
+    _pollTicks = new TimerTickSource(1000);
     _vm = new CloneHeroScrobbleViewModel(
       new LastfmClient(apiKeyStorage.ApiKey, apiKeyStorage.ApiSecret),
       _logService,
       new CloneHeroFileSongSource(),
-      new TimerTickSource(1000),
+      _pollTicks,
       filePickerService,
       discordRichPresence);
   }
@@ -73,5 +75,10 @@ public sealed class CloneHeroScrobblePlugin : PluginBase.Plugin.PluginBase, IAut
   {
     _vm.FunctionContainer = container;
     _vm.UpdateNowPlayingObject = container.UpdateNowPlayingObject;
+  }
+
+  public void Dispose()
+  {
+    _pollTicks.Dispose();
   }
 }
