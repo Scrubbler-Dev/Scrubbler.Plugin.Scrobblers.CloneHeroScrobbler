@@ -74,7 +74,6 @@ public sealed class CloneHeroScrobblePlugin : PluginBase.Plugin.PluginBase, IAut
   public void SetAccountFunctionsContainer(AccountFunctionContainer container)
   {
     _vm.FunctionContainer = container;
-    _vm.UpdateNowPlayingObject = container.UpdateNowPlayingObject;
   }
 
   public void Dispose()
